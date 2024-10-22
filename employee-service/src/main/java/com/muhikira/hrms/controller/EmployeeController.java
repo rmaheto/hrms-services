@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class EmployeeController {
 
-  private final  EmployeeService employeeService;
+  private final EmployeeService employeeService;
 
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping
-  public EmployeeDto createEmployee(@RequestBody Employee employee) {
-    return employeeService.createEmployee(employee);
+  public ResponseEntity<EmployeeDto> createEmployee(@RequestBody Employee employee) {
+    return ResponseEntity.ok(employeeService.createEmployee(employee));
   }
 
   @GetMapping
@@ -38,13 +38,13 @@ public class EmployeeController {
   }
 
   @GetMapping("/firstName/{firstName}")
-  public List<EmployeeDto> getEmployeesByFirstName(@PathVariable String firstName) {
-    return employeeService.getEmployeesByFirstName(firstName);
+  public ResponseEntity<List<EmployeeDto>> getEmployeesByFirstName(@PathVariable String firstName) {
+    return ResponseEntity.ok(employeeService.getEmployeesByFirstName(firstName));
   }
 
   @GetMapping("/lastName/{lastName}")
-  public List<EmployeeDto> getEmployeesByLastName(@PathVariable String lastName) {
-    return employeeService.getEmployeesByLastName(lastName);
+  public ResponseEntity<List<EmployeeDto>> getEmployeesByLastName(@PathVariable String lastName) {
+    return ResponseEntity.ok(employeeService.getEmployeesByLastName(lastName));
   }
 
   @GetMapping("/department/{departmentId}")
@@ -55,13 +55,13 @@ public class EmployeeController {
   }
 
   @GetMapping("/salary/{salary}")
-  public List<EmployeeDto> getEmployeesBySalary(@PathVariable BigDecimal salary) {
-    return employeeService.getEmployeesBySalary(salary);
+  public ResponseEntity<List<EmployeeDto>> getEmployeesBySalary(@PathVariable BigDecimal salary) {
+    return ResponseEntity.ok(employeeService.getEmployeesBySalary(salary));
   }
 
   @GetMapping("/age/{age}")
-  public List<EmployeeDto> getEmployeesByAge(@PathVariable int age) {
-    return employeeService.getEmployeesByAge(age);
+  public ResponseEntity<List<EmployeeDto>> getEmployeesByAge(@PathVariable int age) {
+    return ResponseEntity.ok(employeeService.getEmployeesByAge(age));
   }
 
   @PutMapping("/{id}")
