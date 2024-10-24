@@ -5,6 +5,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.muhikira.authservice.dto.UserRequestDto;
 import org.muhikira.authservice.dto.UserResponseDto;
+import org.muhikira.authservice.dto.UserUpdateRequestDto;
 import org.muhikira.authservice.entity.Role;
 import org.muhikira.authservice.model.RoleName;
 import org.muhikira.authservice.model.UpdatePasswordRequest;
@@ -51,6 +52,16 @@ public class UserController {
   public ResponseEntity<String> createUserForEmployee(@RequestBody UserRequestDto userDto) {
     userService.createUser(userDto);
     return new ResponseEntity<>("User created for employee successfully", HttpStatus.CREATED);
+  }
+
+  @PreAuthorize("hasRole('ROLE_ADMIN') or authentication.principal.id == #userId")
+  @PatchMapping("/{userId}/update")
+  public ResponseEntity<UserResponseDto> updateUser(
+      @PathVariable Long userId,
+      @RequestBody UserUpdateRequestDto userUpdateRequestDto
+  ) {
+    UserResponseDto updatedUser = userService.updateUser(userId, userUpdateRequestDto);
+    return new ResponseEntity<>(updatedUser, HttpStatus.OK);
   }
 
   @PreAuthorize("authentication.principal.id == #userId or hasRole('ROLE_ADMIN')")
