@@ -1,0 +1,28 @@
+# Ignore IDE and build files
+.idea/
+*.iml
+*.log
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+*.ipr
+*.iws
+*.idea/
+
+# Ignore Mac system files
+.DS_Store
+
+# Node modules (if applicable)
+node_modules/
