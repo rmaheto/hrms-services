@@ -1,0 +1,36 @@
+server:
+  port: 8050
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    username: root
+    password: dev@123
+    url: jdbc:mysql://localhost:3306/notification_db
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+
+  mail:
+    host: smtp.gmail.com  # Replace with your SMTP server
+    port: 587
+    username: your-email@gmail.com  # Your email address
+    password: your-email-password   # Your email password
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com  # Trust the server if using Gmail
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka

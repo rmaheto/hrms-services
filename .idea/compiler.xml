@@ -15,7 +15,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="notification-service" target="17" />
+      <module name="notification-service" target="1.5" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -26,7 +26,7 @@
       <module name="attendance-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="department-service" options="-parameters" />
-      <module name="notification-service" options="-parameters" />
+      <module name="notification-service" options="" />
     </option>
   </component>
 </project>
