@@ -46,6 +46,13 @@ public class UserController {
     return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
   }
 
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/create-for-employee")
+  public ResponseEntity<String> createUserForEmployee(@RequestBody UserRequestDto userDto) {
+    userService.createUser(userDto);
+    return new ResponseEntity<>("User created for employee successfully", HttpStatus.CREATED);
+  }
+
   @PreAuthorize("authentication.principal.id == #userId or hasRole('ROLE_ADMIN')")
   @PatchMapping("/{userId}/update-password")
   public ResponseEntity<String> updatePassword(

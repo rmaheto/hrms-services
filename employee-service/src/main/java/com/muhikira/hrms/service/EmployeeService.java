@@ -2,23 +2,31 @@ package com.muhikira.hrms.service;
 
 import com.muhikira.hrms.dto.DepartmentDto;
 import com.muhikira.hrms.dto.EmployeeDto;
+import com.muhikira.hrms.dto.UserRequestDto;
 import com.muhikira.hrms.exception.DepartmentNotFoundException;
 import com.muhikira.hrms.mapper.EmployeeMapper;
 import com.muhikira.hrms.model.Employee;
+import com.muhikira.hrms.model.RoleName;
 import com.muhikira.hrms.repository.EmployeeRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
 
   private final DepartmentServiceClient departmentServiceClient;
+
+  private final AuthServiceClient authServiceClient;
 
   public EmployeeDto createEmployee(Employee employee) {
     DepartmentDto department =
@@ -32,6 +40,9 @@ public class EmployeeService {
             .block();
 
     Employee savedEmployee = employeeRepository.save(employee);
+
+    createUserForEmployee(savedEmployee);
+
     return EmployeeMapper.toDto(savedEmployee, department);
   }
 
@@ -147,5 +158,26 @@ public class EmployeeService {
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Employee not found with id " + id));
     employeeRepository.delete(employee);
+  }
+
+  private void createUserForEmployee(Employee employee) {
+    String randomPassword = generateRandomPassword();
+    UserRequestDto userDto = new UserRequestDto();
+    userDto.setUsername(employee.getEmail());
+    userDto.setPassword(randomPassword);
+    userDto.setRoles(Set.of(RoleName.ROLE_USER));
+    userDto.setEmployeeId(employee.getId());
+
+    // Call Auth Service to create user and block to ensure user creation is successful
+    authServiceClient.createUser(userDto).block();
+
+    // Send email to the employee with the account details using Kafka
+//    notificationServiceClient.sendAccountDetails(
+//        employee.getEmail(), employee.getFirstName(), userDto.getUsername(), randomPassword
+//    );
+  }
+
+  private String generateRandomPassword() {
+    return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
   }
 }

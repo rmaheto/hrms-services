@@ -19,16 +19,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(roles = "ADMIN")
 class EmployeeControllerIntegrationTest {
 
   @Autowired
@@ -52,7 +55,7 @@ class EmployeeControllerIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.firstName").value("John"))
         .andExpect(jsonPath("$.lastName").value("Doe"))
-        .andExpect(jsonPath("$.departmentId").value(1));
+        .andExpect(jsonPath("$.department.id").value(1));
   }
 
   @Test
