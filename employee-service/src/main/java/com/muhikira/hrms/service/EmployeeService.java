@@ -116,7 +116,7 @@ public class EmployeeService {
         .toList();
   }
 
-  public EmployeeDto updateEmployee(Long id, Employee employeeDetails) {
+  public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDetails) {
     Employee employee =
         employeeRepository
             .findById(id)
@@ -129,7 +129,7 @@ public class EmployeeService {
     employee.setDateOfBirth(employeeDetails.getDateOfBirth());
     employee.setPlaceOfBirth(employeeDetails.getPlaceOfBirth());
     employee.setPosition(employeeDetails.getPosition());
-    employee.setDepartmentId(employeeDetails.getDepartmentId());
+    employee.setDepartmentId(employeeDetails.getDepartment().getId());
     employee.setHireDate(employeeDetails.getHireDate());
     employee.setSalary(employeeDetails.getSalary());
 
