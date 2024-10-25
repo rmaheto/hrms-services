@@ -10,7 +10,7 @@ public class NotificationRequest {
   private List<String> recipients;
   private String subject;
   private String messageBody; // The message body with placeholders
-  private String templateId; // Optional, ID of the template to use
+  private Long templateId; // Optional, ID of the template to use
   private Map<String, String> placeholders; // Placeholder values for the template
   private MessageType messageType;
   private String serviceId;

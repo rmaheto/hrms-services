@@ -3,17 +3,16 @@ package com.muhikira.notificationservice.service;
 import com.muhikira.notificationservice.model.MessageType;
 import com.muhikira.notificationservice.model.NotificationRequest;
 import com.muhikira.notificationservice.model.NotificationStatus;
-import com.muhikira.notificationservice.model.NotificationTemplate;
+import com.muhikira.notificationservice.model.NotificationTemplateDto;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-  private final JavaMailSender mailSender;
+  private final MailjetService mailjetService;
   private final TemplateService templateService;
   private final NotificationLogService notificationLogService;
 
@@ -21,24 +20,26 @@ public class EmailService {
     String body = notificationRequest.getMessageBody();
     String subject = notificationRequest.getSubject();
 
+    // Check if a template is specified and process it
     if (notificationRequest.getTemplateId() != null) {
-      NotificationTemplate template = templateService.getTemplateById(notificationRequest.getTemplateId());
-      if (template != null) {
-        body = templateService.processTemplate(template.getBody(), notificationRequest.getPlaceholders());
-        subject = template.getSubject(); // Use subject from the template
+      Optional<NotificationTemplateDto> template = templateService.getTemplateById(notificationRequest.getTemplateId());
+      if (template.isPresent()) {
+        body = templateService.processTemplate(template.get().getBody(), notificationRequest.getPlaceholders());
+        subject = template.get().getSubject(); // Use the subject from the template
       }
     }
 
-
+    // Iterate over recipients and send emails using MailjetService
     for (String recipient : notificationRequest.getRecipients()) {
       try {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(recipient);
-        message.setSubject(subject);
-        message.setText(body);
-        message.setFrom("your-email@gmail.com");
-
-        mailSender.send(message);
+        // Send email using Mailjet
+        mailjetService.sendEmail(
+            recipient,
+            "", // Optional: You can pass recipient name if available
+            subject,
+            body,
+            body
+        );
 
         // Log successful email
         notificationLogService.logNotification(

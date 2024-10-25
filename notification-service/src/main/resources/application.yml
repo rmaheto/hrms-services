@@ -15,20 +15,21 @@ spring:
     hibernate:
       ddl-auto: update
 
-  mail:
-    host: smtp.gmail.com  # Replace with your SMTP server
-    port: 587
-    username: your-email@gmail.com  # Your email address
-    password: your-email-password   # Your email password
-    protocol: smtp
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          ssl:
-            trust: smtp.gmail.com  # Trust the server if using Gmail
+mailjet:
+  api:
+    public-key: e675cd1502741adeda4f2d4cbdca36df
+    private-key: 142f4dfe25986d9a20d9dca2f1331339
+
+twilio:
+  account:
+    sid: your_twilio_account_sid
+  auth:
+    token: your_twilio_auth_token
+  from:
+    phone: +1234567890
+
+jwt:
+  secret: mySecretKey
 
 eureka:
   client:

@@ -1,26 +1,56 @@
 package com.muhikira.notificationservice.service;
 
-import com.muhikira.notificationservice.model.NotificationTemplate;
-import java.util.HashMap;
+
+import com.muhikira.notificationservice.entity.NotificationTemplate;
+import com.muhikira.notificationservice.model.NotificationTemplateDto;
+import com.muhikira.notificationservice.repository.NotificationTemplateRepository;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TemplateService {
-  // In-memory store for templates (use a database in production)
-  private Map<String, NotificationTemplate> templateStore = new HashMap<>();
 
-  // Method to add or update a template
+  private final NotificationTemplateRepository notificationTemplateRepository;
   public void saveTemplate(NotificationTemplate template) {
-    templateStore.put(template.getId(), template);
+    notificationTemplateRepository.save(template);
   }
 
-  // Method to get a template by ID
-  public NotificationTemplate getTemplateById(String id) {
-    return templateStore.get(id);
+  public Optional<NotificationTemplateDto> getTemplateById(Long id) {
+    return notificationTemplateRepository.findById(id)
+        .map(NotificationTemplateDto::new);
   }
 
-  // Method to process the template and replace placeholders with actual values
+  public List<NotificationTemplateDto> getAllTemplates(){
+
+    return notificationTemplateRepository.findAll().stream()
+        .map(notificationTemplate -> new NotificationTemplateDto(
+            notificationTemplate.getId(),
+            notificationTemplate.getName(),
+            notificationTemplate.getMessageType(),
+            notificationTemplate.getSubject(),
+            notificationTemplate.getBody()
+        )).toList();
+  }
+
+  public NotificationTemplateDto updateTemplate(Long id, NotificationTemplate updatedTemplate) {
+    Optional<NotificationTemplate> existingTemplate = notificationTemplateRepository.findById(id);
+
+    if (existingTemplate.isPresent()) {
+      NotificationTemplate template = existingTemplate.get();
+      template.setName(updatedTemplate.getName());
+      template.setSubject(updatedTemplate.getSubject());
+      template.setBody(updatedTemplate.getBody());
+      NotificationTemplate savedTemplate = notificationTemplateRepository.save(template);
+      return new NotificationTemplateDto(savedTemplate);
+    } else {
+      throw new IllegalArgumentException("Template with ID " + id + " not found.");
+    }
+  }
+
   public String processTemplate(String templateBody, Map<String, String> values) {
     String processedBody = templateBody;
 
