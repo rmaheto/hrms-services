@@ -2,6 +2,7 @@ package com.muhikira.hrms.service;
 
 import com.muhikira.hrms.dto.DepartmentDto;
 import com.muhikira.hrms.dto.EmployeeDto;
+import com.muhikira.hrms.dto.EmployeeUpdateRequestDto;
 import com.muhikira.hrms.dto.UserRequestDto;
 import com.muhikira.hrms.exception.DepartmentNotFoundException;
 import com.muhikira.hrms.mapper.EmployeeMapper;
@@ -14,12 +15,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
@@ -127,12 +131,19 @@ public class EmployeeService {
         .toList();
   }
 
-  public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDetails) {
+  public EmployeeDto updateEmployee(Long id, EmployeeUpdateRequestDto employeeDetails) {
     Employee employee =
         employeeRepository
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Employee not found with id " + id));
 
+    DepartmentDto department =
+        departmentServiceClient.getDepartmentById(employee.getDepartmentId()).block();
+
+    if (department == null) {
+      log.warn("Department with id: {} not found", employee.getDepartmentId());
+      throw new DepartmentNotFoundException("Department not found");
+    }
     employee.setFirstName(employeeDetails.getFirstName());
     employee.setLastName(employeeDetails.getLastName());
     employee.setEmail(employeeDetails.getEmail());
@@ -140,14 +151,11 @@ public class EmployeeService {
     employee.setDateOfBirth(employeeDetails.getDateOfBirth());
     employee.setPlaceOfBirth(employeeDetails.getPlaceOfBirth());
     employee.setPosition(employeeDetails.getPosition());
-    employee.setDepartmentId(employeeDetails.getDepartment().getId());
+    employee.setDepartmentId(employeeDetails.getDepartmentId());
     employee.setHireDate(employeeDetails.getHireDate());
     employee.setSalary(employeeDetails.getSalary());
 
     Employee savedEmployee = employeeRepository.save(employee);
-
-    DepartmentDto department =
-        departmentServiceClient.getDepartmentById(employee.getDepartmentId()).block();
 
     return EmployeeMapper.toDto(savedEmployee, department);
   }
@@ -170,11 +178,6 @@ public class EmployeeService {
 
     // Call Auth Service to create user and block to ensure user creation is successful
     authServiceClient.createUser(userDto).block();
-
-    // Send email to the employee with the account details using Kafka
-//    notificationServiceClient.sendAccountDetails(
-//        employee.getEmail(), employee.getFirstName(), userDto.getUsername(), randomPassword
-//    );
   }
 
   private String generateRandomPassword() {

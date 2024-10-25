@@ -1,6 +1,7 @@
 package com.muhikira.hrms.controller;
 
 import com.muhikira.hrms.dto.EmployeeDto;
+import com.muhikira.hrms.dto.EmployeeUpdateRequestDto;
 import com.muhikira.hrms.model.Employee;
 import com.muhikira.hrms.service.EmployeeService;
 import java.math.BigDecimal;
@@ -66,7 +67,7 @@ public class EmployeeController {
 
   @PutMapping("/{id}")
   public ResponseEntity<EmployeeDto> updateEmployee(
-      @PathVariable Long id, @RequestBody EmployeeDto employeeDetails) {
+      @PathVariable Long id, @RequestBody EmployeeUpdateRequestDto employeeDetails) {
     return new ResponseEntity<>(
         employeeService.updateEmployee(id, employeeDetails), HttpStatus.ACCEPTED);
   }
