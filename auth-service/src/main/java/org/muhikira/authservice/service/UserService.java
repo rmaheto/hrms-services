@@ -3,9 +3,11 @@ package org.muhikira.authservice.service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.muhikira.authservice.dto.UserRequestDto;
 import org.muhikira.authservice.dto.UserResponseDto;
+import org.muhikira.authservice.dto.UserUpdateRequestDto;
 import org.muhikira.authservice.entity.Role;
 import org.muhikira.authservice.entity.User;
 import org.muhikira.authservice.exception.IncorrectOldPasswordException;
@@ -49,6 +51,25 @@ public class UserService {
     user.setRoles(roles);
 
     userRepository.save(user);
+  }
+
+  public UserResponseDto updateUser(Long userId, UserUpdateRequestDto userUpdateRequestDto) {
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+    user.setUsername(userUpdateRequestDto.getUsername());
+
+    Set<Role> roles = userUpdateRequestDto.getRoles().stream()
+        .map(roleName -> roleRepository.findByName(roleName)
+            .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+        .collect(Collectors.toSet());
+
+    user.setRoles(roles);
+
+    User updatedUser = userRepository.save(user);
+
+    return UserMapper.toUserResponseDto(updatedUser);
   }
 
   public void updatePassword(Long userId, UpdatePasswordRequest passwordRequest) {

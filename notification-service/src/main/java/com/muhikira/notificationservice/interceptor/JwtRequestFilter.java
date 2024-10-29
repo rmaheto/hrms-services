@@ -1,6 +1,6 @@
-package com.muhikira.hrms.interceptor;
+package com.muhikira.notificationservice.interceptor;
 
-import com.muhikira.hrms.util.JwtUtil;
+import com.muhikira.notificationservice.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,8 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
       authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
       SecurityContextHolder.getContext().setAuthentication(authToken);
-      }
-
+    }
 
     chain.doFilter(request, response);
   }

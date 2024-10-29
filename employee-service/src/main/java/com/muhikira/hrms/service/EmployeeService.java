@@ -2,23 +2,35 @@ package com.muhikira.hrms.service;
 
 import com.muhikira.hrms.dto.DepartmentDto;
 import com.muhikira.hrms.dto.EmployeeDto;
+import com.muhikira.hrms.dto.EmployeeUpdateRequestDto;
+import com.muhikira.hrms.dto.UserRequestDto;
 import com.muhikira.hrms.exception.DepartmentNotFoundException;
 import com.muhikira.hrms.mapper.EmployeeMapper;
 import com.muhikira.hrms.model.Employee;
+import com.muhikira.hrms.model.RoleName;
 import com.muhikira.hrms.repository.EmployeeRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
+@Slf4j
 public class EmployeeService {
 
   private final EmployeeRepository employeeRepository;
 
   private final DepartmentServiceClient departmentServiceClient;
+
+  private final AuthServiceClient authServiceClient;
 
   public EmployeeDto createEmployee(Employee employee) {
     DepartmentDto department =
@@ -32,6 +44,9 @@ public class EmployeeService {
             .block();
 
     Employee savedEmployee = employeeRepository.save(employee);
+
+    createUserForEmployee(savedEmployee);
+
     return EmployeeMapper.toDto(savedEmployee, department);
   }
 
@@ -116,12 +131,19 @@ public class EmployeeService {
         .toList();
   }
 
-  public EmployeeDto updateEmployee(Long id, Employee employeeDetails) {
+  public EmployeeDto updateEmployee(Long id, EmployeeUpdateRequestDto employeeDetails) {
     Employee employee =
         employeeRepository
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Employee not found with id " + id));
 
+    DepartmentDto department =
+        departmentServiceClient.getDepartmentById(employee.getDepartmentId()).block();
+
+    if (department == null) {
+      log.warn("Department with id: {} not found", employee.getDepartmentId());
+      throw new DepartmentNotFoundException("Department not found");
+    }
     employee.setFirstName(employeeDetails.getFirstName());
     employee.setLastName(employeeDetails.getLastName());
     employee.setEmail(employeeDetails.getEmail());
@@ -135,9 +157,6 @@ public class EmployeeService {
 
     Employee savedEmployee = employeeRepository.save(employee);
 
-    DepartmentDto department =
-        departmentServiceClient.getDepartmentById(employee.getDepartmentId()).block();
-
     return EmployeeMapper.toDto(savedEmployee, department);
   }
 
@@ -147,5 +166,21 @@ public class EmployeeService {
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Employee not found with id " + id));
     employeeRepository.delete(employee);
+  }
+
+  private void createUserForEmployee(Employee employee) {
+    String randomPassword = generateRandomPassword();
+    UserRequestDto userDto = new UserRequestDto();
+    userDto.setUsername(employee.getEmail());
+    userDto.setPassword(randomPassword);
+    userDto.setRoles(Set.of(RoleName.ROLE_USER));
+    userDto.setEmployeeId(employee.getId());
+
+    // Call Auth Service to create user and block to ensure user creation is successful
+    authServiceClient.createUser(userDto).block();
+  }
+
+  private String generateRandomPassword() {
+    return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
   }
 }

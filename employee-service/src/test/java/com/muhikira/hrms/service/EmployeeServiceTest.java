@@ -1,6 +1,11 @@
 package com.muhikira.hrms.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -9,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.muhikira.hrms.dto.DepartmentDto;
 import com.muhikira.hrms.dto.EmployeeDto;
+import com.muhikira.hrms.dto.UserRequestDto;
 import com.muhikira.hrms.exception.DepartmentNotFoundException;
 import com.muhikira.hrms.model.Employee;
 import com.muhikira.hrms.repository.EmployeeRepository;
@@ -23,11 +29,17 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
-  @Mock private EmployeeRepository employeeRepository;
+  @Mock
+  private EmployeeRepository employeeRepository;
 
-  @Mock private DepartmentServiceClient departmentServiceClient;
+  @Mock
+  private DepartmentServiceClient departmentServiceClient;
 
-  @InjectMocks private EmployeeService employeeService;
+  @Mock
+  private AuthServiceClient authServiceClient;
+
+  @InjectMocks
+  private EmployeeService employeeService;
 
   @Test
   void createEmployee_whenDepartmentExists_thenEmployeeIsCreated() {
@@ -37,11 +49,14 @@ class EmployeeServiceTest {
     when(departmentServiceClient.getDepartmentById(employee.getDepartmentId()))
         .thenReturn(Mono.just(departmentDto));
     when(employeeRepository.save(employee)).thenReturn(employee);
+    when(authServiceClient.createUser(any(UserRequestDto.class)))
+        .thenReturn(Mono.empty());
 
     EmployeeDto result = employeeService.createEmployee(employee);
 
     assertNotNull(result);
     verify(employeeRepository, times(1)).save(employee);
+    verify(authServiceClient, times(1)).createUser(any(UserRequestDto.class));
   }
 
   @Test

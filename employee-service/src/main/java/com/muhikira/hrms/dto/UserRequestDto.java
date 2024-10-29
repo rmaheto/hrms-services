@@ -1,8 +1,9 @@
-package org.muhikira.authservice.dto;
+package com.muhikira.hrms.dto;
 
+import com.muhikira.hrms.model.RoleName;
 import java.util.Set;
 import lombok.Data;
-import org.muhikira.authservice.model.RoleName;
+
 
 @Data
 public class UserRequestDto {

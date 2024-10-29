@@ -20,6 +20,11 @@ spring:
 jwt:
   secret: mySecretKey
 
+auth-service:
+  base-url: http://localhost:8080/api/users
+  endpoints:
+    create: "/create-for-employee"
+
 department-service:
   base-url: http://localhost:8080/api/departments
   endpoints:
