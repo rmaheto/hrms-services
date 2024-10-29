@@ -42,6 +42,7 @@ public class TemplateService {
     if (existingTemplate.isPresent()) {
       NotificationTemplate template = existingTemplate.get();
       template.setName(updatedTemplate.getName());
+      template.setMessageType(updatedTemplate.getMessageType());
       template.setSubject(updatedTemplate.getSubject());
       template.setBody(updatedTemplate.getBody());
       NotificationTemplate savedTemplate = notificationTemplateRepository.save(template);
