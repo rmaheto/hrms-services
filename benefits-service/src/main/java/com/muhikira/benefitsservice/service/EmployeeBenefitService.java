@@ -1,5 +1,6 @@
 package com.muhikira.benefitsservice.service;
 
+import com.muhikira.benefitsservice.dto.BenefitAssignmentResultDto;
 import com.muhikira.benefitsservice.dto.EmployeeBenefitDto;
 import com.muhikira.benefitsservice.dto.EmployeeDto;
 import com.muhikira.benefitsservice.entity.BenefitPlan;
@@ -10,52 +11,95 @@ import com.muhikira.benefitsservice.repository.BenefitPlanRepository;
 import com.muhikira.benefitsservice.repository.EmployeeBenefitRepository;
 import com.muhikira.benefitsservice.rest.EmployeeServiceClient;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmployeeBenefitService {
 
   private final EmployeeBenefitRepository employeeBenefitRepository;
   private final BenefitPlanRepository benefitPlanRepository;
   private final EmployeeServiceClient employeeServiceClient;
 
-  /**
-   * Assign a benefit plan to an employee after checking eligibility.
-   */
   @Transactional
-  public EmployeeBenefitDto assignBenefit(Long employeeId, Long benefitPlanId, String notes) {
-    BenefitPlan plan = benefitPlanRepository.findById(benefitPlanId)
-        .filter(BenefitPlan::getIsActive)
-        .orElseThrow(() -> new IllegalArgumentException("Benefit plan not found or inactive"));
+  public List<BenefitAssignmentResultDto> assignBenefits(
+      Long employeeId, List<Long> benefitPlanIds) {
+    log.info(
+        "Attempting to assign benefit plans with IDs {} to employee with ID {}",
+        benefitPlanIds,
+        employeeId);
 
-    if (!isEligibleForBenefit(employeeId, plan)) {
-      throw new IllegalArgumentException("Employee is not eligible for this benefit.");
+    EmployeeDto employee =
+        employeeServiceClient
+            .getEmployeeById(employeeId)
+            .blockOptional()
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Employee with ID " + employeeId + " does not exist"));
+    log.info("Employee with ID {} exists. Proceeding with benefit assignments.", employee.getId());
+
+    List<BenefitAssignmentResultDto> results = new ArrayList<>();
+
+    for (Long benefitPlanId : benefitPlanIds) {
+      try {
+        BenefitPlan plan =
+            benefitPlanRepository
+                .findById(benefitPlanId)
+                .filter(BenefitPlan::getIsActive)
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Benefit plan not found or inactive for ID: " + benefitPlanId));
+
+        if (!isEligibleForBenefit(employeeId, plan)) {
+          String message = "Employee not eligible for benefit ID: " + benefitPlanId;
+          log.warn(message);
+          results.add(new BenefitAssignmentResultDto("Failed", message, null));
+          continue;
+        }
+
+        EmployeeBenefit employeeBenefit =
+            EmployeeBenefit.builder()
+                .employeeId(employeeId)
+                .benefitPlanId(benefitPlanId)
+                .startDate(LocalDate.now())
+                .status(BenefitStatus.ACTIVE)
+                .build();
+
+        employeeBenefitRepository.save(employeeBenefit);
+        results.add(
+            new BenefitAssignmentResultDto(
+                "Success",
+                "Benefit assigned successfully",
+                EmployeeBenefitMapper.toDto(employeeBenefit)));
+        log.info(
+            "Successfully assigned benefit plan with ID {} to employee with ID {}",
+            benefitPlanId,
+            employeeId);
+
+      } catch (IllegalArgumentException e) {
+        log.error("Error assigning benefit plan with ID {}: {}", benefitPlanId, e.getMessage());
+        results.add(new BenefitAssignmentResultDto("Failed", e.getMessage(), null));
+      }
     }
 
-    EmployeeBenefit employeeBenefit = EmployeeBenefit.builder()
-        .employeeId(employeeId)
-        .benefitPlanId(benefitPlanId)
-        .startDate(LocalDate.now())
-        .status(BenefitStatus.ACTIVE)
-        .notes(notes)
-        .build();
-
-    employeeBenefitRepository.save(employeeBenefit);
-    return EmployeeBenefitMapper.toDto(employeeBenefit);
+    log.info("Completed assigning eligible benefit plans to employee with ID {}", employeeId);
+    return results;
   }
 
-  /**
-   * Update an existing employee benefit record.
-   */
   @Transactional
   public EmployeeBenefitDto updateEmployeeBenefit(Long id, EmployeeBenefitDto updatedDto) {
-    EmployeeBenefit existing = employeeBenefitRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Employee benefit record not found"));
+    EmployeeBenefit existing =
+        employeeBenefitRepository
+            .findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Employee benefit record not found"));
 
     existing.setEndDate(updatedDto.getEndDate());
     existing.setStatus(updatedDto.getStatus());
@@ -65,52 +109,34 @@ public class EmployeeBenefitService {
     return EmployeeBenefitMapper.toDto(existing);
   }
 
-  /**
-   * Deactivate a benefit plan, preventing it from new assignments.
-   */
-  @Transactional
-  public void deactivateBenefitPlan(Long benefitPlanId) {
-    benefitPlanRepository.findById(benefitPlanId).ifPresent(plan -> {
-      plan.setIsActive(false);
-      benefitPlanRepository.save(plan);
-    });
-  }
-
-  /**
-   * Fetch all benefits assigned to a specific employee.
-   */
   public List<EmployeeBenefitDto> getEmployeeBenefits(Long employeeId) {
     return employeeBenefitRepository.findByEmployeeId(employeeId).stream()
         .map(EmployeeBenefitMapper::toDto)
-        .collect(Collectors.toList());
+        .toList();
   }
 
-  /**
-   * Check if an employee is eligible for a benefit plan.
-   */
   private boolean isEligibleForBenefit(Long employeeId, BenefitPlan plan) {
-    EmployeeDto employee = employeeServiceClient.getEmployeeById(employeeId)
-        .blockOptional()
-        .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+    EmployeeDto employee =
+        employeeServiceClient
+            .getEmployeeById(employeeId)
+            .blockOptional()
+            .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
 
-    // Check years of service
-    if (plan.getMinServiceYears() != null && employee.getServiceYears() < plan.getMinServiceYears()) {
+    if (plan.getMinServiceYears() != null
+        && employee.getServiceYears() < plan.getMinServiceYears()) {
       return false;
     }
 
-    // Check age
     if (plan.getMinAge() != null && employee.getAge() < plan.getMinAge()) {
       return false;
     }
 
-    // Check department eligibility
-    if (!plan.getEligibleDepartmentIds().isEmpty() &&
-        !plan.getEligibleDepartmentIds().contains(employee.getDepartment().getId())) {
+    if (!plan.getEligibleDepartmentIds().isEmpty()
+        && !plan.getEligibleDepartmentIds().contains(employee.getDepartment().getId())) {
       return false;
     }
 
-    // Check position eligibility
-    return plan.getEligiblePositionIds().isEmpty() ||
-        plan.getEligiblePositionIds().contains(employee.getPositionId());
+    return plan.getEligiblePositionIds().isEmpty()
+        || plan.getEligiblePositionIds().contains(employee.getPositionId());
   }
 }

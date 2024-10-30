@@ -48,7 +48,7 @@ spring:
         - id: benefits-service
           uri: lb://benefits-service
           predicates:
-            - Path=/api/benefits/**
+            - Path=/api/benefit-plans/**, /api/benefits/**
         - id: attendance-service
           uri: lb://attendance-service
           predicates:
