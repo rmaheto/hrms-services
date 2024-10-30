@@ -1,6 +1,8 @@
 package com.muhikira.benefitsservice.controller;
 
+import com.muhikira.benefitsservice.dto.BenefitAssignmentResultDto;
 import com.muhikira.benefitsservice.dto.EmployeeBenefitDto;
+import com.muhikira.benefitsservice.model.ApiResponse;
 import com.muhikira.benefitsservice.service.EmployeeBenefitService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,56 +24,37 @@ public class EmployeeBenefitController {
 
   private final EmployeeBenefitService employeeBenefitService;
 
-  /**
-   * Assign a benefit plan to an employee.
-   */
-  @PostMapping("/assign")
-  public ResponseEntity<?> assignBenefit(@RequestParam Long employeeId,
-      @RequestParam Long benefitPlanId,
-      @RequestParam(required = false) String notes) {
-    try {
-      EmployeeBenefitDto assignedBenefit = employeeBenefitService.assignBenefit(employeeId,
-          benefitPlanId, notes);
-      return ResponseEntity.status(HttpStatus.CREATED).body(assignedBenefit);
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
+  @PostMapping("/{employeeId}/assign")
+  public ResponseEntity<ApiResponse<List<BenefitAssignmentResultDto>>> assignBenefits(
+      @PathVariable Long employeeId,
+      @RequestParam List<Long> benefitPlanIds) {
+
+    List<BenefitAssignmentResultDto> assignmentResults =
+        employeeBenefitService.assignBenefits(employeeId, benefitPlanIds);
+
+    ApiResponse<List<BenefitAssignmentResultDto>> response =
+        new ApiResponse<>("Benefit assignment completed with results", assignmentResults);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  /**
-   * Update an existing employee benefit record.
-   */
   @PutMapping("/{id}")
-  public ResponseEntity<?> updateEmployeeBenefit(@PathVariable Long id,
-      @RequestBody EmployeeBenefitDto updatedDto) {
-    try {
-      EmployeeBenefitDto updatedBenefit = employeeBenefitService.updateEmployeeBenefit(id,
-          updatedDto);
-      return ResponseEntity.ok(updatedBenefit);
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
+  public ResponseEntity<ApiResponse<EmployeeBenefitDto>> updateEmployeeBenefit(
+      @PathVariable Long id, @RequestBody EmployeeBenefitDto updatedDto) {
+
+    EmployeeBenefitDto updatedBenefit =
+        employeeBenefitService.updateEmployeeBenefit(id, updatedDto);
+    ApiResponse<EmployeeBenefitDto> response =
+        new ApiResponse<>("Benefit updated successfully", updatedBenefit);
+    return ResponseEntity.ok(response);
   }
 
-  /**
-   * Deactivate a benefit plan by its ID.
-   */
-  @PutMapping("/deactivate/{benefitPlanId}")
-  public ResponseEntity<?> deactivateBenefitPlan(@PathVariable Long benefitPlanId) {
-    employeeBenefitService.deactivateBenefitPlan(benefitPlanId);
-    return ResponseEntity.ok("Benefit plan deactivated successfully.");
-  }
-
-  /**
-   * Fetch all benefits assigned to a specific employee.
-   */
   @GetMapping("/employee/{employeeId}")
-  public ResponseEntity<?> getEmployeeBenefits(@PathVariable Long employeeId) {
+  public ResponseEntity<ApiResponse<List<EmployeeBenefitDto>>> getEmployeeBenefits(
+      @PathVariable Long employeeId) {
     List<EmployeeBenefitDto> benefits = employeeBenefitService.getEmployeeBenefits(employeeId);
-    if (benefits.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body("No benefits found for employee with ID " + employeeId);
-    }
-    return ResponseEntity.ok(benefits);
+
+    ApiResponse<List<EmployeeBenefitDto>> response =
+        new ApiResponse<>("Benefits retrieved successfully", benefits);
+    return ResponseEntity.ok(response);
   }
 }

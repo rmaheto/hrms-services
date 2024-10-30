@@ -2,8 +2,13 @@ package com.muhikira.benefitsservice.entity;
 
 import com.muhikira.benefitsservice.enums.EmploymentType;
 import com.muhikira.benefitsservice.enums.PlanLevel;
+import com.muhikira.benefitsservice.listener.AuditListener;
+import com.muhikira.benefitsservice.model.audit.Audit;
+import com.muhikira.benefitsservice.model.audit.Auditable;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +26,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BenefitPlan {
+@EntityListeners(AuditListener.class)
+public class BenefitPlan implements Auditable {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,8 +46,6 @@ public class BenefitPlan {
   private BigDecimal employerContribution;
   private BigDecimal employeeContribution;
   private Boolean isActive;
-
-  // Eligibility criteria as direct fields
   private Integer minServiceYears;
   private Integer minAge;
 
@@ -50,4 +54,6 @@ public class BenefitPlan {
 
   @ElementCollection
   private Set<Long> eligiblePositionIds;
+
+  @Embedded private Audit audit;
 }

@@ -5,6 +5,7 @@ import com.muhikira.benefitsservice.entity.BenefitPlan;
 import com.muhikira.benefitsservice.exception.BenefitPlanNotFoundException;
 import com.muhikira.benefitsservice.mapper.BenefitPlanMapper;
 import com.muhikira.benefitsservice.repository.BenefitPlanRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,9 +48,22 @@ public class BenefitPlanService {
     benefitPlanRepository.save(benefitPlan);
   }
 
+  public void activateBenefitPlan(Long id) {
+    BenefitPlan benefitPlan = benefitPlanRepository.findById(id)
+        .orElseThrow(() -> new BenefitPlanNotFoundException(BENEFIT_NOT_FOUND));
+    benefitPlan.setIsActive(true);
+    benefitPlanRepository.save(benefitPlan);
+  }
+
   public BenefitPlanDto getBenefitPlanById(Long id) {
     BenefitPlan benefitPlan = benefitPlanRepository.findById(id)
         .orElseThrow(() -> new BenefitPlanNotFoundException(BENEFIT_NOT_FOUND));
     return BenefitPlanMapper.toDto(benefitPlan);
+  }
+
+  public List<BenefitPlanDto> getAllBenefitPlans() {
+    return benefitPlanRepository.findAll().stream()
+        .map(BenefitPlanMapper::toDto)
+        .toList();
   }
 }
