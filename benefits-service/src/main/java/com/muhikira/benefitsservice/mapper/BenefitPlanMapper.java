@@ -14,7 +14,7 @@ public class BenefitPlanMapper {
         benefitPlan.getPlanLevel(),
         benefitPlan.getEmploymentType(),
         benefitPlan.getEmployerContribution(),
-        benefitPlan.getEmployeeContribution(),
+        benefitPlan.getFixedEmployeeContribution(),
         benefitPlan.getIsActive(),
         benefitPlan.getMinServiceYears(),
         benefitPlan.getMinAge(),
@@ -32,7 +32,7 @@ public class BenefitPlanMapper {
         .planLevel(benefitPlanDto.getPlanLevel())
         .employmentType(benefitPlanDto.getEmploymentType())
         .employerContribution(benefitPlanDto.getEmployerContribution())
-        .employeeContribution(benefitPlanDto.getEmployeeContribution())
+        .fixedEmployeeContribution(benefitPlanDto.getFixedEmployeeContribution())
         .minServiceYears(benefitPlanDto.getMinServiceYears())
         .minAge(benefitPlanDto.getMinAge())
         .eligibleDepartmentIds(benefitPlanDto.getEligibleDepartmentIds())

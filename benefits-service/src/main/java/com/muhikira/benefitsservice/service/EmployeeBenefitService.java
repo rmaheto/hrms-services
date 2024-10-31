@@ -2,11 +2,14 @@ package com.muhikira.benefitsservice.service;
 
 import com.muhikira.benefitsservice.dto.BenefitAssignmentResultDto;
 import com.muhikira.benefitsservice.dto.EmployeeBenefitDto;
+import com.muhikira.benefitsservice.dto.EmployeeBenefitPlanDto;
 import com.muhikira.benefitsservice.dto.EmployeeDto;
 import com.muhikira.benefitsservice.entity.BenefitPlan;
 import com.muhikira.benefitsservice.entity.EmployeeBenefit;
 import com.muhikira.benefitsservice.enums.BenefitStatus;
+import com.muhikira.benefitsservice.enums.PlanLevel;
 import com.muhikira.benefitsservice.mapper.EmployeeBenefitMapper;
+import com.muhikira.benefitsservice.mapper.EmployeeBenefitPlanMapper;
 import com.muhikira.benefitsservice.repository.BenefitPlanRepository;
 import com.muhikira.benefitsservice.repository.EmployeeBenefitRepository;
 import com.muhikira.benefitsservice.rest.EmployeeServiceClient;
@@ -58,12 +61,12 @@ public class EmployeeBenefitService {
                         new IllegalArgumentException(
                             "Benefit plan not found or inactive for ID: " + benefitPlanId));
 
-        if (!isEligibleForBenefit(employeeId, plan)) {
-          String message = "Employee not eligible for benefit ID: " + benefitPlanId;
-          log.warn(message);
-          results.add(new BenefitAssignmentResultDto("Failed", message, null));
-          continue;
-        }
+//        if (!isEligibleForBenefit(employeeId, plan)) {
+//          String message = "Employee not eligible for benefit ID: " + benefitPlanId;
+//          log.warn(message);
+//          results.add(new BenefitAssignmentResultDto("Failed", message, null));
+//          continue;
+//        }
 
         EmployeeBenefit employeeBenefit =
             EmployeeBenefit.builder()
@@ -111,7 +114,23 @@ public class EmployeeBenefitService {
 
   public List<EmployeeBenefitDto> getEmployeeBenefits(Long employeeId) {
     return employeeBenefitRepository.findByEmployeeId(employeeId).stream()
-        .map(EmployeeBenefitMapper::toDto)
+        .map(benefit -> {
+          BenefitPlan benefitPlan = benefitPlanRepository.findById(benefit.getBenefitPlanId())
+              .orElseThrow(() -> new IllegalArgumentException("Benefit plan not found"));
+
+          EmployeeBenefitPlanDto benefitPlanDto = EmployeeBenefitPlanMapper.toDto(benefitPlan);
+
+          EmployeeBenefitDto employeeBenefitDto = EmployeeBenefitMapper.toDto(benefit);
+          employeeBenefitDto.setBenefitPlan(benefitPlanDto);
+
+          if (benefitPlanDto.getPlanLevel() != PlanLevel.FIXED) {
+            employeeBenefitDto.setEmployeeContribution(benefit.getEmployeeContribution());
+          } else {
+            employeeBenefitDto.setEmployeeContribution(benefitPlanDto.getFixedEmployeeContribution());
+          }
+
+          return employeeBenefitDto;
+        })
         .toList();
   }
 

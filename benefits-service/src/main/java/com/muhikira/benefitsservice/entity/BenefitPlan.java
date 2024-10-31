@@ -44,7 +44,7 @@ public class BenefitPlan implements Auditable {
   private EmploymentType employmentType;
 
   private BigDecimal employerContribution;
-  private BigDecimal employeeContribution;
+  private BigDecimal fixedEmployeeContribution;
   private Boolean isActive;
   private Integer minServiceYears;
   private Integer minAge;

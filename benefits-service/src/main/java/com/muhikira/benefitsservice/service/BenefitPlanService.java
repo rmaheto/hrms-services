@@ -32,7 +32,7 @@ public class BenefitPlanService {
     existingPlan.setPlanLevel(benefitPlanDto.getPlanLevel());
     existingPlan.setEmploymentType(benefitPlanDto.getEmploymentType());
     existingPlan.setEmployerContribution(benefitPlanDto.getEmployerContribution());
-    existingPlan.setEmployeeContribution(benefitPlanDto.getEmployeeContribution());
+    existingPlan.setFixedEmployeeContribution(benefitPlanDto.getFixedEmployeeContribution());
     existingPlan.setMinServiceYears(benefitPlanDto.getMinServiceYears());
     existingPlan.setMinAge(benefitPlanDto.getMinAge());
     existingPlan.setEligibleDepartmentIds(benefitPlanDto.getEligibleDepartmentIds());
