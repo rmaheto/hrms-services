@@ -12,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,7 @@ public class EmployeeBenefit implements Auditable {
   private BenefitStatus status;
 
   private String notes;
+  private BigDecimal employeeContribution;
   @Embedded
   private Audit audit;
 }
